@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import User from "../models/user.model";
-import bcrypt from "bcrypt.js";
+import User from "../models/user.model.js";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET, JWT_EXPIRE_IN } from "../config/env.js";
 
@@ -10,7 +10,7 @@ export const signUp = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
-    const checkExistingUser = await User.find({ email });
+    const checkExistingUser = await User.findOne({ email });
     if (checkExistingUser) {
       const error = new Error("user already exists");
       error.statusCode = 409;
