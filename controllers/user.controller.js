@@ -1,7 +1,7 @@
-import User from "./models/user.model.user.js";
+import User from "../models/user.model.js";
 export const getUsers = async (req, res, next) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select("-password");
     res.status(200).json({
       success: true,
       data: users,
@@ -14,7 +14,7 @@ export const getUsers = async (req, res, next) => {
 export const getUser = async (req, res, next) => {
   const id = req.params.id;
   try {
-    const user = await User.findById({ id }).select("-password");
+    const user = await User.findById(id).select("-password");
     if (!user) {
       const error = new Error("No user found");
       error.statusCode(404);
