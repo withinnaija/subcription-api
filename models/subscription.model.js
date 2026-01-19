@@ -22,11 +22,12 @@ const subscriptionSchema = new mongoose.Schema(
     frequency: {
       type: String,
       enum: ["daily", "weekly", "monthly", "yearly"],
+      required: true,
     },
     category: {
       type: String,
       enum: [
-        "sports ",
+        "sports",
         "news",
         "entertainment",
         "lifestyle",
@@ -45,24 +46,23 @@ const subscriptionSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["active", "cancelled", "expired"],
-      default: " active",
+      default: "active",
     },
     startDate: {
       type: Date,
       required: true,
       validate: {
         validator: (value) => value <= new Date(),
-        message: "Start date must be in the past",
+        message: "Start date must be in the past or today",
       },
     },
     renewalDate: {
       type: Date,
-      required: true,
       validate: {
         validator: function (value) {
           return value >= this.startDate;
         },
-        message: "Renewal date must be afyer start date",
+        message: "Renewal date must be after start date",
       },
     },
     user: {
@@ -75,7 +75,9 @@ const subscriptionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-subscriptionSchema.pre("save", function (next) {
+// Add middleware BEFORE creating the model
+subscriptionSchema.pre("save", async function () {
+  // Auto-calculate renewal date if not provided
   if (!this.renewalDate) {
     const renewalPeriod = {
       daily: 1,
@@ -89,11 +91,15 @@ subscriptionSchema.pre("save", function (next) {
     );
   }
 
+  // Auto-mark as expired if renewal date has passed
   if (this.renewalDate < new Date()) {
     this.status = "expired";
   }
-  next();
 });
 
-const Subscription = mongoose.model("Subscription", subscriptionSchema);
+// Prevent model overwrite error
+const Subscription =
+  mongoose.models.Subscription ||
+  mongoose.model("Subscription", subscriptionSchema);
+
 export default Subscription;
